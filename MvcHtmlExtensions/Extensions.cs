@@ -24,6 +24,14 @@ namespace MvcHtmlExtensions
             return Dic;
         }
 
+        public static IHtmlString AntiForgeryTokenValue(this HtmlHelper htmlHelper)
+        {
+            var field = htmlHelper.AntiForgeryToken().ToHtmlString();
+            var beginIndex = field.IndexOf("value=\"") + 7;
+            var endIndex = field.IndexOf("\"", beginIndex);
+            return new HtmlString(field.Substring(beginIndex, endIndex - beginIndex));
+        }
+
         public static MvcHtmlString CheckBoxList<T>(this HtmlHelper helper,
                                                String name,
                                                IEnumerable<T> items,

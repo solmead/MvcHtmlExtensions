@@ -5,9 +5,10 @@ using System.Text;
 
 namespace MvcHtmlExtensions
 {
-    public class EnumEntry<tt>
+    public class EnumEntry<tEnum> where tEnum:struct, IConvertible 
     {
-        public tt Value { get; set; }
+        public tEnum Value { get; set; }
+        public int Number { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
 
@@ -15,17 +16,22 @@ namespace MvcHtmlExtensions
         {
         
         }
-        public EnumEntry(tt value)
+        public EnumEntry(tEnum value)
         {
             Value = value;
+            var n = Convert.ChangeType(value, value.GetTypeCode());
+            if (n != null)
+            {
+                Number = (int) n; 
+            }
             Name = value.ToString();
-            Description = Extensions.GetEnumDescription<tt>(value);
+            Description = Extensions.GetEnumDescription<tEnum>(value);
         }
-        public static List<EnumEntry<tt>> GetList()
+        public static List<EnumEntry<tEnum>> GetList()
         {
-            Type enumType = typeof(tt);
-            IEnumerable<tt> values = Enum.GetValues(enumType).Cast<tt>();
-            return values.Select(i => new EnumEntry<tt>(i)).ToList();
+            Type enumType = typeof(tEnum);
+            IEnumerable<tEnum> values = Enum.GetValues(enumType).Cast<tEnum>();
+            return values.Select(i => new EnumEntry<tEnum>(i)).ToList();
         }
     }
 }
