@@ -1,0 +1,1 @@
+"..\.nuget\nuget" pack MvcHtmlExtensions.csproj -IncludeReferencedProjects
