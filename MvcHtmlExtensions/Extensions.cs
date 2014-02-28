@@ -8,6 +8,7 @@ using System.Text;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Mvc.Html;
+using PocoPropertyData;
 
 namespace MvcHtmlExtensions
 {
@@ -174,7 +175,7 @@ namespace MvcHtmlExtensions
         }
         public static MvcHtmlString RadioButtonListFor<TModel, TProperty>(
         this HtmlHelper<TModel> htmlHelper,
-        Expression<Func<TModel, TProperty>> expression, List<SelectListItem> selectList
+        Expression<Func<TModel, TProperty>> expression, List<SelectListItem> selectList, object htmlAttributes = null
     )
         {
             ModelMetadata metadata = ModelMetadata.FromLambdaExpression(expression, htmlHelper.ViewData);
@@ -188,8 +189,28 @@ namespace MvcHtmlExtensions
                     metadata.PropertyName,
                     select.Value
                 );
-
-                var radio = htmlHelper.RadioButtonFor(expression, select.Value, new { id = id }).ToHtmlString();
+                if (htmlAttributes == null)
+                {
+                    htmlAttributes = new
+                    {
+                        id = id
+                    };
+                }
+                var dic = htmlAttributes.PropertiesAsDictionary();
+                if (dic.ContainsKey("id"))
+                {
+                    dic.Add("id", id);
+                }
+                else
+                {
+                    dic["id"] = id;
+                }
+                var dic2 = new Dictionary<string, object>();
+                foreach (var k in dic.Keys)
+                {
+                    dic2.Add(k, dic[k]);
+                }
+                var radio = htmlHelper.RadioButtonFor(expression, select.Value, dic2).ToHtmlString();
                 sb.Append("<li>");
                 sb.AppendFormat(
                     "{2} <label for=\"{0}\">{1}</label>",
