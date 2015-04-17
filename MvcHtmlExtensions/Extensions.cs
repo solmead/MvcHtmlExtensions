@@ -62,7 +62,76 @@ namespace MvcHtmlExtensions
             }
             return MvcHtmlString.Create(checklist.ToString());
         }
+        public static MvcHtmlString CheckBoxList(this HtmlHelper htmlHelper, 
+                                               String name,
+                                               IEnumerable<SelectListItem> items,
+                                               object htmlAttributes)
+        {
 
+            //TagBuilder tag;
+            //StringBuilder checklist = new StringBuilder();
+            //foreach (var item in items)
+            //{
+            //    tag = new TagBuilder("input");
+            //    tag.Attributes["type"] = "checkbox";
+            //    tag.Attributes["value"] = item.Value.ToString();
+            //    tag.Attributes["name"] =name;
+            //    if (item.Selected)
+            //    {
+            //        tag.Attributes["checked"] = "checked";
+            //    }
+            //    tag.InnerHtml = item.Text;
+            //    checklist.Append(tag.ToString());
+            //    checklist.Append("<br />");
+            //}
+
+            if (htmlAttributes == null)
+            {
+                htmlAttributes = new
+                {
+                    @class = name
+                };
+            }
+            var dic = htmlAttributes.PropertiesAsDictionary();
+            if (!dic.ContainsKey("class"))
+            {
+                dic.Add("class", name);
+            }
+
+            dic["class"] = dic["class"] + " CheckBoxList";
+            
+            var ol = new TagBuilder("ol");
+            foreach (var k in dic.Keys)
+            {
+                ol.Attributes.Add(new KeyValuePair<string, string>(k, dic[k]));
+            }
+
+
+            var sb = new StringBuilder();
+            foreach (var item in items)
+            {
+                var id = string.Format(
+                    "{0}_{1}",
+                    htmlHelper.ViewData.TemplateInfo.HtmlFieldPrefix,
+                    name
+                );
+
+                var radio = htmlHelper.CheckBox(id, item.Selected, new { value = item.Value }).ToHtmlString();
+                sb.Append("<li>");
+                sb.AppendFormat(
+                    "{2} <label for=\"{0}\">{1}</label>",
+                    id,
+                    HttpUtility.HtmlEncode(item.Text),
+                    radio
+                );
+                sb.Append("</li>");
+            }
+            ol.InnerHtml = sb.ToString();
+
+            return MvcHtmlString.Create(ol.ToString());
+
+            //return MvcHtmlString.Create(checklist.ToString());
+        }
         public static IDisposable BeginHtmlFieldPrefixScope(this HtmlHelper html, string htmlFieldPrefix)
         {
             return new HtmlFieldPrefixScope(html.ViewData.TemplateInfo, htmlFieldPrefix);
