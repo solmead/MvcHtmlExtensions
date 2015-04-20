@@ -110,17 +110,27 @@ namespace MvcHtmlExtensions
             var sb = new StringBuilder();
             foreach (var item in items)
             {
-                var id = string.Format(
-                    "{0}_{1}",
-                    htmlHelper.ViewData.TemplateInfo.HtmlFieldPrefix,
-                    name
-                );
+                var id = name;
+                var baseId = name + "_" + item.Value;
+                if (!string.IsNullOrWhiteSpace(htmlHelper.ViewData.TemplateInfo.HtmlFieldPrefix))
+                {
+                    id = string.Format(
+                        "{0}_{1}",
+                        htmlHelper.ViewData.TemplateInfo.HtmlFieldPrefix,
+                        id
+                        );
+                    baseId = string.Format(
+                        "{0}_{1}",
+                        htmlHelper.ViewData.TemplateInfo.HtmlFieldPrefix,
+                        baseId
+                        );
+                }
 
-                var radio = htmlHelper.CheckBox(id, item.Selected, new { value = item.Value }).ToHtmlString();
+                var radio = htmlHelper.CheckBox(id, item.Selected, new { id = baseId, value = item.Value }).ToHtmlString();
                 sb.Append("<li>");
                 sb.AppendFormat(
                     "{2} <label for=\"{0}\">{1}</label>",
-                    id,
+                    baseId,
                     HttpUtility.HtmlEncode(item.Text),
                     radio
                 );
