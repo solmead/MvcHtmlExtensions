@@ -8,6 +8,7 @@ using System.Text;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Mvc.Html;
+using PocoPropertyData;
 
 namespace MvcHtmlExtensions
 {
@@ -61,7 +62,86 @@ namespace MvcHtmlExtensions
             }
             return MvcHtmlString.Create(checklist.ToString());
         }
+        public static MvcHtmlString CheckBoxList(this HtmlHelper htmlHelper, 
+                                               String name,
+                                               IEnumerable<SelectListItem> items,
+                                               object htmlAttributes)
+        {
 
+            //TagBuilder tag;
+            //StringBuilder checklist = new StringBuilder();
+            //foreach (var item in items)
+            //{
+            //    tag = new TagBuilder("input");
+            //    tag.Attributes["type"] = "checkbox";
+            //    tag.Attributes["value"] = item.Value.ToString();
+            //    tag.Attributes["name"] =name;
+            //    if (item.Selected)
+            //    {
+            //        tag.Attributes["checked"] = "checked";
+            //    }
+            //    tag.InnerHtml = item.Text;
+            //    checklist.Append(tag.ToString());
+            //    checklist.Append("<br />");
+            //}
+
+            if (htmlAttributes == null)
+            {
+                htmlAttributes = new
+                {
+                    @class = name
+                };
+            }
+            var dic = htmlAttributes.PropertiesAsDictionary();
+            if (!dic.ContainsKey("class"))
+            {
+                dic.Add("class", name);
+            }
+
+            dic["class"] = dic["class"] + " CheckBoxList";
+            
+            var ol = new TagBuilder("ol");
+            foreach (var k in dic.Keys)
+            {
+                ol.Attributes.Add(new KeyValuePair<string, string>(k, dic[k]));
+            }
+
+
+            var sb = new StringBuilder();
+            foreach (var item in items)
+            {
+                var id = name;
+                var baseId = name + "_" + item.Value;
+                if (!string.IsNullOrWhiteSpace(htmlHelper.ViewData.TemplateInfo.HtmlFieldPrefix))
+                {
+                    id = string.Format(
+                        "{0}_{1}",
+                        htmlHelper.ViewData.TemplateInfo.HtmlFieldPrefix,
+                        id
+                        );
+                    baseId = string.Format(
+                        "{0}_{1}",
+                        htmlHelper.ViewData.TemplateInfo.HtmlFieldPrefix,
+                        baseId
+                        );
+                }
+
+                var radio = htmlHelper.CheckBox(id, item.Selected, new { id = baseId, value = item.Value }).ToHtmlString();
+                sb.Append("<li>");
+                sb.AppendFormat(
+                    "{2} <label for=\"{0}\">{1}</label>",
+                    baseId,
+                    HttpUtility.HtmlEncode(item.Text),
+                    radio
+                );
+                sb.Append("</li>");
+            }
+            ol.InnerHtml = sb.ToString();
+
+            return MvcHtmlString.Create(ol.ToString());
+
+            //return MvcHtmlString.Create(checklist.ToString());
+        }
         public static IDisposable BeginHtmlFieldPrefixScope(this HtmlHelper html, string htmlFieldPrefix)
         {
             return new HtmlFieldPrefixScope(html.ViewData.TemplateInfo, htmlFieldPrefix);
@@ -174,7 +254,7 @@ namespace MvcHtmlExtensions
         }
         public static MvcHtmlString RadioButtonListFor<TModel, TProperty>(
         this HtmlHelper<TModel> htmlHelper,
-        Expression<Func<TModel, TProperty>> expression, List<SelectListItem> selectList
+        Expression<Func<TModel, TProperty>> expression, List<SelectListItem> selectList, object htmlAttributes = null
     )
         {
             ModelMetadata metadata = ModelMetadata.FromLambdaExpression(expression, htmlHelper.ViewData);
@@ -188,8 +268,28 @@ namespace MvcHtmlExtensions
                     metadata.PropertyName,
                     select.Value
                 );
-
-                var radio = htmlHelper.RadioButtonFor(expression, select.Value, new { id = id }).ToHtmlString();
+                if (htmlAttributes == null)
+                {
+                    htmlAttributes = new
+                    {
+                        id = id
+                    };
+                }
+                var dic = htmlAttributes.PropertiesAsDictionary();
+                if (dic.ContainsKey("id"))
+                {
+                    dic.Add("id", id);
+                }
+                else
+                {
+                    dic["id"] = id;
+                }
+                var dic2 = new Dictionary<string, object>();
+                foreach (var k in dic.Keys)
+                {
+                    dic2.Add(k, dic[k]);
+                }
+                var radio = htmlHelper.RadioButtonFor(expression, select.Value, dic2).ToHtmlString();
                 sb.Append("<li>");
                 sb.AppendFormat(
                     "{2} <label for=\"{0}\">{1}</label>",
@@ -212,45 +312,129 @@ namespace MvcHtmlExtensions
             return new MvcHtmlString(metadata.DisplayName);
         }
 
-    public static MvcHtmlString DropDownYesNoForCheck<TModel, TProperty> (this HtmlHelper<TModel> htmlHelper, Expression<Func<TModel, TProperty>> expression)
+        public static MvcHtmlString DropDownYesNoForCheck<TModel, TProperty>(this HtmlHelper<TModel> htmlHelper,
+            Expression<Func<TModel, TProperty>> expression)
+        {
+            return DropDownYesNoBooleanFor(htmlHelper, expression);
+
+        }
+
+        public static MvcHtmlString DropDownYesNoBooleanFor<TModel, TProperty>(this HtmlHelper<TModel> htmlHelper,
+            Expression<Func<TModel, TProperty>> expression, 
+            object htmlAttributes = null)
         {
             ModelMetadata metadata = ModelMetadata.FromLambdaExpression(expression, htmlHelper.ViewData);
-            
-            var selectList = new List<SelectListItem>();
-        selectList.Add(new SelectListItem()
+            if (htmlAttributes == null)
             {
-                Text="No",
-                Value="False"
+                htmlAttributes = new
+                {
+                    @class = ""
+                };
+            }
+            var dic = htmlAttributes.PropertiesAsDictionary();
+            var dic2 = new Dictionary<string, object>();
+            foreach (var k in dic.Keys)
+            {
+                dic2.Add(k, dic[k]);
+            }
+
+            var selectList = new List<SelectListItem>();
+            selectList.Add(new SelectListItem()
+            {
+                Text = "No",
+                Value = "False"
             });
-        selectList.Add(new SelectListItem()
-        {
-            Text = "Yes",
-            Value = "True"
-        });
-            var dropdown = htmlHelper.DropDownListFor(expression,selectList).ToHtmlString();
+            selectList.Add(new SelectListItem()
+            {
+                Text = "Yes",
+                Value = "True"
+            });
+            var dropdown = htmlHelper.DropDownListFor(expression, selectList, dic2).ToHtmlString();
 
 
             return MvcHtmlString.Create(dropdown);
         }
-    public static MvcHtmlString RadioYesNoForCheck<TModel, TProperty>(this HtmlHelper<TModel> htmlHelper, Expression<Func<TModel, TProperty>> expression)
-    {
-        ModelMetadata metadata = ModelMetadata.FromLambdaExpression(expression, htmlHelper.ViewData);
-
-        var selectList = new List<SelectListItem>();
-        selectList.Add(new SelectListItem()
+        public static MvcHtmlString DropDownYesNoBoolean<TModel>(this HtmlHelper<TModel> htmlHelper,
+            string id,
+            Boolean value,
+            object htmlAttributes = null)
         {
-            Text = "No",
-            Value = "False"
-        });
-        selectList.Add(new SelectListItem()
+            if (htmlAttributes == null)
+            {
+                htmlAttributes = new
+                {
+                    @class = ""
+                };
+            }
+            var dic = htmlAttributes.PropertiesAsDictionary();
+            var dic2 = new Dictionary<string, object>();
+            foreach (var k in dic.Keys)
+            {
+                dic2.Add(k, dic[k]);
+            }
+
+            var selectList = new List<SelectListItem>();
+            selectList.Add(new SelectListItem()
+            {
+                Text = "No",
+                Value = "False",
+                Selected=!value
+            });
+            selectList.Add(new SelectListItem()
+            {
+                Text = "Yes",
+                Value = "True",
+                Selected = value
+            });
+            var dropdown = htmlHelper.DropDownList(id, selectList, dic2).ToHtmlString();
+
+
+            return MvcHtmlString.Create(dropdown);
+        }
+
+        
+        public static MvcHtmlString RadioYesNoForCheck<TModel, TProperty>(this HtmlHelper<TModel> htmlHelper,
+            Expression<Func<TModel, TProperty>> expression)
         {
-            Text = "Yes",
-            Value = "True"
-        });
-        var dropdown = htmlHelper.RadioButtonListFor(expression, selectList).ToHtmlString();
+            return RadioYesNoBooleanFor(htmlHelper, expression);
+
+        }
+
+        public static MvcHtmlString RadioYesNoBooleanFor<TModel, TProperty>(this HtmlHelper<TModel> htmlHelper,
+            Expression<Func<TModel, TProperty>> expression,
+            object htmlAttributes = null)
+        {
+            ModelMetadata metadata = ModelMetadata.FromLambdaExpression(expression, htmlHelper.ViewData);
+            if (htmlAttributes == null)
+            {
+                htmlAttributes = new
+                {
+                    @class = ""
+                };
+            }
+            var dic = htmlAttributes.PropertiesAsDictionary();
+            var dic2 = new Dictionary<string, object>();
+            foreach (var k in dic.Keys)
+            {
+                dic2.Add(k, dic[k]);
+            }
+
+            var selectList = new List<SelectListItem>();
+            selectList.Add(new SelectListItem()
+            {
+                Text = "No",
+                Value = "False"
+            });
+            selectList.Add(new SelectListItem()
+            {
+                Text = "Yes",
+                Value = "True"
+            });
+            var dropdown = htmlHelper.RadioButtonListFor(expression, selectList, dic2).ToHtmlString();
 
 
-        return MvcHtmlString.Create(dropdown);
-    }
+            return MvcHtmlString.Create(dropdown);
+        }
+        
     }
 }
