@@ -32,7 +32,85 @@ namespace MvcHtmlExtensions
             var endIndex = field.IndexOf("\"", beginIndex);
             return new HtmlString(field.Substring(beginIndex, endIndex - beginIndex));
         }
+        public static MvcHtmlString LabelEx(this HtmlHelper html, string expression, string labelText, object htmlAttributes)
+        {
+            if (String.IsNullOrEmpty(labelText))
+            {
+                return MvcHtmlString.Empty;
+            }
+            //var sb = new StringBuilder();
+            //sb.Append(labelText);
+            //sb.Append(":");
 
+            var tag = new TagBuilder("label");
+            //if (!string.IsNullOrWhiteSpace(id))
+            //{
+            //    tag.Attributes.Add("id", id);
+            //}
+            //else if (generatedId)
+            //{
+            //    tag.Attributes.Add("id", html.ViewContext.ViewData.TemplateInfo.GetFullHtmlFieldId(htmlFieldName) + "_Label");
+            //}
+            if (htmlAttributes == null)
+            {
+                htmlAttributes = new
+                {
+                    @class = ""
+                };
+            }
+            var dic = htmlAttributes.PropertiesAsDictionary();
+
+            tag.Attributes.Add("for", html.ViewContext.ViewData.TemplateInfo.GetFullHtmlFieldId(expression));
+            tag.MergeAttributes(dic, true);
+            tag.InnerHtml = labelText;
+
+
+            return MvcHtmlString.Create(tag.ToString(TagRenderMode.Normal));
+        }
+        public static MvcHtmlString LabelEx(this HtmlHelper html, string expression, string id = "", bool generatedId = false)
+        {
+            return LabelHelper(html, ModelMetadata.FromStringExpression(expression, html.ViewData), expression, id, generatedId);
+        }
+
+        public static MvcHtmlString LabelForEx<TModel, TValue>(this HtmlHelper<TModel> html, Expression<Func<TModel, TValue>> expression, string id = "", bool generatedId = false)
+        {
+            return LabelHelper(html, ModelMetadata.FromLambdaExpression(expression, html.ViewData), ExpressionHelper.GetExpressionText(expression), id, generatedId);
+        }
+
+        internal static MvcHtmlString LabelHelper(HtmlHelper html, ModelMetadata metadata, string htmlFieldName, string id, bool generatedId)
+        {
+            string labelText = metadata.DisplayName ?? metadata.PropertyName ?? htmlFieldName.Split('.').Last();
+            if (String.IsNullOrEmpty(labelText))
+            {
+                return MvcHtmlString.Empty;
+            }
+            var sb = new StringBuilder();
+            sb.Append(labelText);
+            sb.Append(":");
+
+            var tag = new TagBuilder("label");
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                tag.Attributes.Add("id", id);
+            }
+            else if (generatedId)
+            {
+                tag.Attributes.Add("id", html.ViewContext.ViewData.TemplateInfo.GetFullHtmlFieldId(htmlFieldName) + "_Label");
+            }
+
+            tag.Attributes.Add("for", html.ViewContext.ViewData.TemplateInfo.GetFullHtmlFieldId(htmlFieldName));
+            //tag.SetInnerText();
+
+            tag.InnerHtml = sb.ToString();
+
+            var span = new TagBuilder("span");
+            span.AddCssClass("requiredStar");
+            span.SetInnerText("*");
+            if (metadata.IsRequired)
+                tag.InnerHtml += span.ToString();
+
+            return MvcHtmlString.Create(tag.ToString(TagRenderMode.Normal));
+        }
         public static MvcHtmlString CheckBoxList<T>(this HtmlHelper helper,
                                                String name,
                                                IEnumerable<T> items,
@@ -129,7 +207,7 @@ namespace MvcHtmlExtensions
                 var radio = htmlHelper.CheckBox(id, item.Selected, new { id = baseId, value = item.Value }).ToHtmlString();
                 sb.Append("<li>");
                 sb.AppendFormat(
-                    "{2} <label for=\"{0}\">{1}</label>",
+                    "<label for=\"{0}\">{2} {1}</label>",
                     baseId,
                     HttpUtility.HtmlEncode(item.Text),
                     radio
@@ -276,7 +354,7 @@ namespace MvcHtmlExtensions
                     };
                 }
                 var dic = htmlAttributes.PropertiesAsDictionary();
-                if (dic.ContainsKey("id"))
+                if (!dic.ContainsKey("id"))
                 {
                     dic.Add("id", id);
                 }
@@ -292,7 +370,7 @@ namespace MvcHtmlExtensions
                 var radio = htmlHelper.RadioButtonFor(expression, select.Value, dic2).ToHtmlString();
                 sb.Append("<li>");
                 sb.AppendFormat(
-                    "{2} <label for=\"{0}\">{1}</label>",
+                    "<label for=\"{0}\">{2} {1}</label>",
                     id,
                     HttpUtility.HtmlEncode(select.Text),
                     radio
@@ -302,6 +380,60 @@ namespace MvcHtmlExtensions
             sb.Append("</ol>");
             return MvcHtmlString.Create(sb.ToString());
         }
+
+        public static MvcHtmlString RadioButtonList<TModel>(
+        this HtmlHelper<TModel> htmlHelper,
+        string name, List<SelectListItem> selectList, object htmlAttributes = null
+    )
+        {
+           // ModelMetadata metadata = ModelMetadata.FromLambdaExpression(expression, htmlHelper.ViewData);
+            var sb = new StringBuilder();
+            sb.Append("<ol class='RadioList'>");
+            foreach (var select in selectList)
+            {
+                var id = string.Format(
+                    "{0}_{1}_{2}",
+                    htmlHelper.ViewData.TemplateInfo.HtmlFieldPrefix,
+                    name,
+                    select.Value
+                );
+                if (htmlAttributes == null)
+                {
+                    htmlAttributes = new
+                    {
+                        id = id
+                    };
+                }
+                var dic = htmlAttributes.PropertiesAsDictionary();
+                if (!dic.ContainsKey("id"))
+                {
+                    dic.Add("id", id);
+                }
+                else
+                {
+                    dic["id"] = id;
+                }
+                var dic2 = new Dictionary<string, object>();
+                foreach (var k in dic.Keys)
+                {
+                    dic2.Add(k, dic[k]);
+                }
+                var radio = htmlHelper.RadioButton(name, select.Value, dic2).ToHtmlString();
+                sb.Append("<li>");
+                sb.AppendFormat(
+                    "<label for=\"{0}\">{2} {1}</label>",
+                    id,
+                    HttpUtility.HtmlEncode(select.Text),
+                    radio
+                );
+                sb.Append("</li>");
+            }
+            sb.Append("</ol>");
+            return MvcHtmlString.Create(sb.ToString());
+        }
+
+
+
         public static MvcHtmlString DisplayColumnNameFor<TModel, TClass, TProperty> (this HtmlHelper<TModel> helper, IEnumerable<TClass> model, Expression<Func<TClass, TProperty>> expression)
         {
             var name = ExpressionHelper.GetExpressionText(expression);
@@ -323,21 +455,7 @@ namespace MvcHtmlExtensions
             Expression<Func<TModel, TProperty>> expression, 
             object htmlAttributes = null)
         {
-            ModelMetadata metadata = ModelMetadata.FromLambdaExpression(expression, htmlHelper.ViewData);
-            if (htmlAttributes == null)
-            {
-                htmlAttributes = new
-                {
-                    @class = ""
-                };
-            }
-            var dic = htmlAttributes.PropertiesAsDictionary();
-            var dic2 = new Dictionary<string, object>();
-            foreach (var k in dic.Keys)
-            {
-                dic2.Add(k, dic[k]);
-            }
-
+            
             var selectList = new List<SelectListItem>();
             selectList.Add(new SelectListItem()
             {
@@ -349,7 +467,7 @@ namespace MvcHtmlExtensions
                 Text = "Yes",
                 Value = "True"
             });
-            var dropdown = htmlHelper.DropDownListFor(expression, selectList, dic2).ToHtmlString();
+            var dropdown = htmlHelper.DropDownListFor(expression, selectList, htmlAttributes).ToHtmlString();
 
 
             return MvcHtmlString.Create(dropdown);
@@ -359,20 +477,6 @@ namespace MvcHtmlExtensions
             Boolean value,
             object htmlAttributes = null)
         {
-            if (htmlAttributes == null)
-            {
-                htmlAttributes = new
-                {
-                    @class = ""
-                };
-            }
-            var dic = htmlAttributes.PropertiesAsDictionary();
-            var dic2 = new Dictionary<string, object>();
-            foreach (var k in dic.Keys)
-            {
-                dic2.Add(k, dic[k]);
-            }
-
             var selectList = new List<SelectListItem>();
             selectList.Add(new SelectListItem()
             {
@@ -386,7 +490,7 @@ namespace MvcHtmlExtensions
                 Value = "True",
                 Selected = value
             });
-            var dropdown = htmlHelper.DropDownList(id, selectList, dic2).ToHtmlString();
+            var dropdown = htmlHelper.DropDownList(id, selectList, htmlAttributes).ToHtmlString();
 
 
             return MvcHtmlString.Create(dropdown);
@@ -435,6 +539,38 @@ namespace MvcHtmlExtensions
 
             return MvcHtmlString.Create(dropdown);
         }
-        
+
+        public static MvcHtmlString RadioYesNoBoolean<TModel>(this HtmlHelper<TModel> htmlHelper,
+            string name,
+            object htmlAttributes = null)
+        {
+           // ModelMetadata metadata = ModelMetadata.FromLambdaExpression(expression, htmlHelper.ViewData);
+            if (htmlAttributes == null)
+            {
+                htmlAttributes = new
+                {
+                    @class = ""
+                };
+            }
+            var dic = htmlAttributes.PropertiesAsDictionary();
+            var dic2 = new Dictionary<string, object>();
+            foreach (var k in dic.Keys)
+            {
+                dic2.Add(k, dic[k]);
+            }
+
+            var selectList = new List<SelectListItem>();
+            selectList.Add(new SelectListItem()
+            {
+                Text = "No",
+                Value = "False"
+            });
+            selectList.Add(new SelectListItem()
+            {
+                Text = "Yes",
+                Value = "True"
+            });
+            return htmlHelper.RadioButtonList(name, selectList, dic2);
+        }
     }
 }
