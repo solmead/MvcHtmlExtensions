@@ -336,6 +336,7 @@ namespace MvcHtmlExtensions
     )
         {
             ModelMetadata metadata = ModelMetadata.FromLambdaExpression(expression, htmlHelper.ViewData);
+            
             var sb = new StringBuilder();
             sb.Append("<ol class='RadioList'>");
             foreach (var select in selectList)
@@ -353,7 +354,11 @@ namespace MvcHtmlExtensions
                         id = id
                     };
                 }
-                var dic = htmlAttributes.PropertiesAsDictionary();
+                var dic = new Dictionary<string, string>();
+                if (htmlAttributes != null)
+                {
+                    dic = htmlAttributes.PropertiesAsDictionary();
+                }
                 if (!dic.ContainsKey("id"))
                 {
                     dic.Add("id", id);
@@ -516,12 +521,12 @@ namespace MvcHtmlExtensions
                     @class = ""
                 };
             }
-            var dic = htmlAttributes.PropertiesAsDictionary();
-            var dic2 = new Dictionary<string, object>();
-            foreach (var k in dic.Keys)
-            {
-                dic2.Add(k, dic[k]);
-            }
+            //var dic = htmlAttributes.PropertiesAsDictionary();
+            //var dic2 = new Dictionary<string, object>();
+            //foreach (var k in dic.Keys)
+            //{
+            //    dic2.Add(k, dic[k]);
+            //}
 
             var selectList = new List<SelectListItem>();
             selectList.Add(new SelectListItem()
@@ -534,7 +539,7 @@ namespace MvcHtmlExtensions
                 Text = "Yes",
                 Value = "True"
             });
-            var dropdown = htmlHelper.RadioButtonListFor(expression, selectList, dic2).ToHtmlString();
+            var dropdown = htmlHelper.RadioButtonListFor(expression, selectList, htmlAttributes).ToHtmlString();
 
 
             return MvcHtmlString.Create(dropdown);
