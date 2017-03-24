@@ -316,8 +316,9 @@ namespace MvcHtmlExtensions
                         baseId
                         );
                 }
-
-                var check = htmlHelper.CheckBox(id, item.Selected, new { id = baseId, value = item.Value }).ToHtmlString();
+                var cbox = htmlHelper.CheckBox(baseId, item.Selected, new {name = id, value = item.Value});
+                var check = cbox.ToHtmlString();
+                check = check.Replace("name=\"" + baseId + "\"", "name=\"" + id + "\"");
 
                 string pureCheckBox = check.Substring(0, check.IndexOf("<input", 1));
                 sb.Append("<li>");
@@ -435,12 +436,32 @@ namespace MvcHtmlExtensions
                                                 };
 
             // If the enum is nullable, add an 'empty' item to the collection
-            if (metadata.IsNullableValueType)
-                items = SingleEmptyItem.Concat(items);
+            //if (metadata.IsNullableValueType)
+            //    items = SingleEmptyItem.Concat(items);
 
             return htmlHelper.RadioButtonListFor(expression, items, htmlAttributes);
         }
+        public static MvcHtmlString EnumRadioButtonList<TModel, TEnum>(
+        this HtmlHelper<TModel> htmlHelper,
+        String name,
+        TEnum? selectedValue,
+        object htmlAttributes = null
+    ) where TEnum: struct
+        {
+            IEnumerable<TEnum> values = Enum.GetValues(typeof(TEnum)).Cast<TEnum>();
 
+            IEnumerable<SelectListItem> items = from value in values
+                                                select new SelectListItem
+                                                {
+                                                    Text = GetEnumDescription(value),
+                                                    Value = value.ToString(),
+                                                    Selected = value.Equals(selectedValue)
+                                                };
+
+            //items = SingleEmptyItem.Concat(items);
+
+            return htmlHelper.RadioButtonList(name, items.ToList(), htmlAttributes);
+        }
         public static MvcHtmlString EnumRadioButtonListFor<TModel, TEnum>(
         this HtmlHelper<TModel> htmlHelper,
         Expression<Func<TModel, TEnum>> expression
@@ -511,7 +532,7 @@ namespace MvcHtmlExtensions
                 sb.AppendFormat(
                     "<label for=\"{0}\">{2} {1}</label>",
                     id,
-                    HttpUtility.HtmlEncode(select.Text),
+                    "<span class='radioLabelText'>" + HttpUtility.HtmlEncode(select.Text) + "</span>",
                     radio
                 );
                 sb.Append("</li>");
@@ -562,7 +583,7 @@ namespace MvcHtmlExtensions
                 sb.AppendFormat(
                     "<label for=\"{0}\">{2} {1}</label>",
                     id,
-                    HttpUtility.HtmlEncode(select.Text),
+                    "<span class='radioLabelText'>" + HttpUtility.HtmlEncode(select.Text) + "</span>",
                     radio
                 );
                 sb.Append("</li>");
