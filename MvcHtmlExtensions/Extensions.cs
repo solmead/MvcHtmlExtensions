@@ -67,19 +67,74 @@ namespace MvcHtmlExtensions
 
             return MvcHtmlString.Create(tag.ToString(TagRenderMode.Normal));
         }
-        public static MvcHtmlString LabelEx(this HtmlHelper html, string expression, string id = "", bool generatedId = false)
+        public static MvcHtmlString LabelEx(this HtmlHelper html, string expression)
         {
-            return LabelHelper(html, ModelMetadata.FromStringExpression(expression, html.ViewData), expression, id, generatedId);
+            return LabelHelper(html, ModelMetadata.FromStringExpression(expression, html.ViewData), expression);
         }
 
-        public static MvcHtmlString LabelForEx<TModel, TValue>(this HtmlHelper<TModel> html, Expression<Func<TModel, TValue>> expression, string id = "", bool generatedId = false)
+        public static MvcHtmlString LabelForEx<TModel, TValue>(this HtmlHelper<TModel> html, Expression<Func<TModel, TValue>> expression)
         {
-            return LabelHelper(html, ModelMetadata.FromLambdaExpression(expression, html.ViewData), ExpressionHelper.GetExpressionText(expression), id, generatedId);
+            return LabelHelper(html, ModelMetadata.FromLambdaExpression(expression, html.ViewData), ExpressionHelper.GetExpressionText(expression));
         }
 
-        internal static MvcHtmlString LabelHelper(HtmlHelper html, ModelMetadata metadata, string htmlFieldName, string id, bool generatedId)
+        public static MvcHtmlString LabelForEx<TModel, TValue>(this HtmlHelper<TModel> html, Expression<Func<TModel, TValue>> expression, string labelText)
         {
-            string labelText = metadata.DisplayName ?? metadata.PropertyName ?? htmlFieldName.Split('.').Last();
+            return LabelHelper(html, ModelMetadata.FromLambdaExpression(expression, html.ViewData), ExpressionHelper.GetExpressionText(expression), labelText);
+        }
+        public static MvcHtmlString LabelForEx<TModel, TValue>(this HtmlHelper<TModel> html, Expression<Func<TModel, TValue>> expression, IDictionary<string, object> htmlAttributes)
+        {
+            var dic = new Dictionary<string, string>();
+            if (htmlAttributes != null)
+            {
+                htmlAttributes.Keys.ToList().ForEach((key) =>
+                {
+                    dic.Add(key, htmlAttributes[key].ToString());
+                });
+            }
+            return LabelHelper(html, ModelMetadata.FromLambdaExpression(expression, html.ViewData), ExpressionHelper.GetExpressionText(expression), htmlAttributes: dic);
+        }
+        public static MvcHtmlString LabelForEx<TModel, TValue>(this HtmlHelper<TModel> html, Expression<Func<TModel, TValue>> expression, string labelText, IDictionary<string, object> htmlAttributes)
+        {
+
+            var dic = new Dictionary<string, string>();
+            if (htmlAttributes != null)
+            {
+                htmlAttributes.Keys.ToList().ForEach((key) =>
+                {
+                    dic.Add(key, htmlAttributes[key].ToString());
+                });
+            }
+
+            return LabelHelper(html, ModelMetadata.FromLambdaExpression(expression, html.ViewData), ExpressionHelper.GetExpressionText(expression), labelText, dic);
+        }
+        public static MvcHtmlString LabelForEx<TModel, TValue>(this HtmlHelper<TModel> html, Expression<Func<TModel, TValue>> expression, string labelText, object htmlAttributes)
+        {
+            if (htmlAttributes == null)
+            {
+                htmlAttributes = new
+                {
+                    @class = ""
+                };
+            }
+            var dic = htmlAttributes.PropertiesAsDictionary();
+            return LabelHelper(html, ModelMetadata.FromLambdaExpression(expression, html.ViewData), ExpressionHelper.GetExpressionText(expression), labelText, dic);
+        }
+        public static MvcHtmlString LabelForEx<TModel, TValue>(this HtmlHelper<TModel> html, Expression<Func<TModel, TValue>> expression,object htmlAttributes)
+        {
+            if (htmlAttributes == null)
+            {
+                htmlAttributes = new
+                {
+                    @class = ""
+                };
+            }
+            var dic = htmlAttributes.PropertiesAsDictionary();
+            return LabelHelper(html, ModelMetadata.FromLambdaExpression(expression, html.ViewData), ExpressionHelper.GetExpressionText(expression), htmlAttributes: dic);
+        }
+
+        internal static MvcHtmlString LabelHelper(HtmlHelper html, ModelMetadata metadata, string htmlFieldName, string labelText = null, IDictionary<string, string> htmlAttributes = null)
+        {
+            labelText = labelText ?? metadata.DisplayName ?? metadata.PropertyName ?? htmlFieldName.Split('.').Last();
             if (String.IsNullOrEmpty(labelText))
             {
                 return MvcHtmlString.Empty;
@@ -89,14 +144,15 @@ namespace MvcHtmlExtensions
             sb.Append(":");
 
             var tag = new TagBuilder("label");
-            if (!string.IsNullOrWhiteSpace(id))
-            {
-                tag.Attributes.Add("id", id);
-            }
-            else if (generatedId)
-            {
-                tag.Attributes.Add("id", html.ViewContext.ViewData.TemplateInfo.GetFullHtmlFieldId(htmlFieldName) + "_Label");
-            }
+            tag.MergeAttributes(htmlAttributes);
+            //if (!string.IsNullOrWhiteSpace(id))
+            //{
+            //    tag.Attributes.Add("id", id);
+            //}
+            //else if (generatedId)
+            //{
+            //    tag.Attributes.Add("id", html.ViewContext.ViewData.TemplateInfo.GetFullHtmlFieldId(htmlFieldName) + "_Label");
+            //}
 
             tag.Attributes.Add("for", html.ViewContext.ViewData.TemplateInfo.GetFullHtmlFieldId(htmlFieldName));
             //tag.SetInnerText();
@@ -140,28 +196,14 @@ namespace MvcHtmlExtensions
             }
             return MvcHtmlString.Create(checklist.ToString());
         }
+
+
         public static MvcHtmlString CheckBoxList(this HtmlHelper htmlHelper, 
                                                String name,
                                                IEnumerable<SelectListItem> items,
                                                object htmlAttributes)
         {
-
-            //TagBuilder tag;
-            //StringBuilder checklist = new StringBuilder();
-            //foreach (var item in items)
-            //{
-            //    tag = new TagBuilder("input");
-            //    tag.Attributes["type"] = "checkbox";
-            //    tag.Attributes["value"] = item.Value.ToString();
-            //    tag.Attributes["name"] =name;
-            //    if (item.Selected)
-            //    {
-            //        tag.Attributes["checked"] = "checked";
-            //    }
-            //    tag.InnerHtml = item.Text;
-            //    checklist.Append(tag.ToString());
-            //    checklist.Append("<br />");
-            //}
+            
 
             if (htmlAttributes == null)
             {
@@ -220,6 +262,83 @@ namespace MvcHtmlExtensions
 
             //return MvcHtmlString.Create(checklist.ToString());
         }
+
+
+
+        public static MvcHtmlString CheckBoxListFor<TModel, TProperty>(
+                                 this HtmlHelper<TModel> htmlHelper,
+                                    Expression<Func<TModel, TProperty>> expression,
+                                    IEnumerable<SelectListItem> items,
+                                    object htmlAttributes)
+        {
+            ModelMetadata metadata = ModelMetadata.FromLambdaExpression(expression, htmlHelper.ViewData);
+
+            var name = metadata.PropertyName;
+
+            if (htmlAttributes == null)
+            {
+                htmlAttributes = new
+                {
+                    @class = name
+                };
+            }
+            var dic = htmlAttributes.PropertiesAsDictionary();
+            if (!dic.ContainsKey("class"))
+            {
+                dic.Add("class", name);
+            }
+
+            dic["class"] = dic["class"] + " CheckBoxList";
+
+            var ol = new TagBuilder("ol");
+            foreach (var k in dic.Keys)
+            {
+                ol.Attributes.Add(new KeyValuePair<string, string>(k, dic[k]));
+            }
+
+
+            var sb = new StringBuilder();
+            foreach (var item in items)
+            {
+                var id = name;
+                var baseId = name + "_" + item.Value;
+                
+                if (!string.IsNullOrWhiteSpace(htmlHelper.ViewData.TemplateInfo.HtmlFieldPrefix))
+                {
+                    id = string.Format(
+                        "{0}_{1}",
+                        htmlHelper.ViewData.TemplateInfo.HtmlFieldPrefix,
+                        id
+                        );
+                    baseId = string.Format(
+                        "{0}_{1}",
+                        htmlHelper.ViewData.TemplateInfo.HtmlFieldPrefix,
+                        baseId
+                        );
+                }
+                var cbox = htmlHelper.CheckBox(baseId, item.Selected, new {name = id, value = item.Value});
+                var check = cbox.ToHtmlString();
+                check = check.Replace("name=\"" + baseId + "\"", "name=\"" + id + "\"");
+
+                string pureCheckBox = check.Substring(0, check.IndexOf("<input", 1));
+                sb.Append("<li>");
+                sb.AppendFormat(
+                    "<label for=\"{0}\">{2} {1}</label>",
+                    baseId,
+                    HttpUtility.HtmlEncode(item.Text),
+                    pureCheckBox
+                );
+                sb.Append("</li>");
+            }
+            ol.InnerHtml = sb.ToString();
+
+            return MvcHtmlString.Create(ol.ToString());
+
+            //return MvcHtmlString.Create(checklist.ToString());
+        }
+
+
+
         public static IDisposable BeginHtmlFieldPrefixScope(this HtmlHelper html, string htmlFieldPrefix)
         {
             return new HtmlFieldPrefixScope(html.ViewData.TemplateInfo, htmlFieldPrefix);
@@ -256,29 +375,17 @@ namespace MvcHtmlExtensions
         }
 
         private static readonly SelectListItem[] SingleEmptyItem = new[] { new SelectListItem { Text = "", Value = "" } };
-
-        public static string GetEnumDescription<TEnum>(TEnum value)
+        
+        public static string GetEnumDescription<TModel, TEnum>(this HtmlHelper<TModel> htmlHelper, TEnum value) where TEnum : struct, IConvertible
         {
-            FieldInfo fi = value.GetType().GetField(value.ToString());
-
-            DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
-
-            if ((attributes != null) && (attributes.Length > 0))
-                return attributes[0].Description;
-            else
-                return value.ToString();
+            return Utilities.EnumExtensions.Extensions.GetEnumDescription(value);
+        }
+        public static MvcHtmlString EnumDropDownListForEx<TModel, TEnum>(this HtmlHelper<TModel> htmlHelper, Expression<Func<TModel, TEnum>> expression) where TEnum : struct, IConvertible
+        {
+            return EnumDropDownListForEx(htmlHelper, expression, null);
         }
 
-        public static string GetEnumDescription<TModel, TEnum>(this HtmlHelper<TModel> htmlHelper, TEnum value)
-        {
-            return GetEnumDescription(value);
-        }
-        public static MvcHtmlString EnumDropDownListFor<TModel, TEnum>(this HtmlHelper<TModel> htmlHelper, Expression<Func<TModel, TEnum>> expression)
-        {
-            return EnumDropDownListFor(htmlHelper, expression, null);
-        }
-
-        public static MvcHtmlString EnumDropDownListFor<TModel, TEnum>(this HtmlHelper<TModel> htmlHelper, Expression<Func<TModel, TEnum>> expression, object htmlAttributes)
+        public static MvcHtmlString EnumDropDownListForEx<TModel, TEnum>(this HtmlHelper<TModel> htmlHelper, Expression<Func<TModel, TEnum>> expression, object htmlAttributes) where TEnum : struct, IConvertible
         {
             ModelMetadata metadata = ModelMetadata.FromLambdaExpression(expression, htmlHelper.ViewData);
             Type enumType = GetNonNullableModelType(metadata);
@@ -287,7 +394,7 @@ namespace MvcHtmlExtensions
             IEnumerable<SelectListItem> items = from value in values
                                                 select new SelectListItem
                                                 {
-                                                    Text = GetEnumDescription(value),
+                                                    Text = Utilities.EnumExtensions.Extensions.GetEnumDescription(value),
                                                     Value = value.ToString(),
                                                     Selected = value.Equals(metadata.Model)
                                                 };
@@ -298,41 +405,77 @@ namespace MvcHtmlExtensions
 
             return htmlHelper.DropDownListFor(expression, items, htmlAttributes);
         }
-        public static MvcHtmlString EnumRadioButtonListFor<TModel, TProperty>(
+
+        public static MvcHtmlString EnumRadioButtonListFor<TModel, TEnum>(
         this HtmlHelper<TModel> htmlHelper,
-        Expression<Func<TModel, TProperty>> expression
-    )
+        Expression<Func<TModel, TEnum>> expression, object htmlAttributes
+    ) where TEnum : struct, IConvertible
         {
             ModelMetadata metadata = ModelMetadata.FromLambdaExpression(expression, htmlHelper.ViewData);
             Type enumType = GetNonNullableModelType(metadata);
-            IEnumerable<TProperty> values = Enum.GetValues(enumType).Cast<TProperty>();
-            var sb = new StringBuilder();
-            sb.Append("<ol class='RadioList'>");
-            foreach (var name in values)
-            {
-                var id = string.Format(
-                    "{0}_{1}_{2}",
-                    htmlHelper.ViewData.TemplateInfo.HtmlFieldPrefix,
-                    metadata.PropertyName,
-                    name
-                );
+            IEnumerable<TEnum> values = Enum.GetValues(enumType).Cast<TEnum>();
 
-                var radio = htmlHelper.RadioButtonFor(expression, name, new { id = id }).ToHtmlString();
-                sb.Append("<li>");
-                sb.AppendFormat(
-                    "{2} <label for=\"{0}\">{1}</label>",
-                    id,
-                    HttpUtility.HtmlEncode(GetEnumDescription(name)),
-                    radio
-                );
-                sb.Append("</li>");
-            }
-            sb.Append("</ol>");
-            return MvcHtmlString.Create(sb.ToString());
+            IEnumerable<SelectListItem> items = from value in values
+                                                select new SelectListItem
+                                                {
+                                                    Text = Utilities.EnumExtensions.Extensions.GetEnumDescription(value),
+                                                    Value = value.ToString(),
+                                                    Selected = value.Equals(metadata.Model)
+                                                };
+
+            // If the enum is nullable, add an 'empty' item to the collection
+            //if (metadata.IsNullableValueType)
+            //    items = SingleEmptyItem.Concat(items);
+
+            return htmlHelper.RadioButtonListFor(expression, items, htmlAttributes);
+        }
+        public static MvcHtmlString EnumRadioButtonList<TModel, TEnum>(
+        this HtmlHelper<TModel> htmlHelper,
+        String name,
+        TEnum? selectedValue,
+        object htmlAttributes = null
+    ) where TEnum : struct, IConvertible
+        {
+            IEnumerable<TEnum> values = Enum.GetValues(typeof(TEnum)).Cast<TEnum>();
+
+            IEnumerable<SelectListItem> items = from value in values
+                                                select new SelectListItem
+                                                {
+                                                    Text = Utilities.EnumExtensions.Extensions.GetEnumDescription(value),
+                                                    Value = value.ToString(),
+                                                    Selected = value.Equals(selectedValue)
+                                                };
+
+            //items = SingleEmptyItem.Concat(items);
+
+            return htmlHelper.RadioButtonList(name, items.ToList(), htmlAttributes);
+        }
+        public static MvcHtmlString EnumRadioButtonListFor<TModel, TEnum>(
+        this HtmlHelper<TModel> htmlHelper,
+        Expression<Func<TModel, TEnum>> expression
+    ) where TEnum : struct, IConvertible
+        {
+            ModelMetadata metadata = ModelMetadata.FromLambdaExpression(expression, htmlHelper.ViewData);
+            Type enumType = GetNonNullableModelType(metadata);
+            IEnumerable<TEnum> values = Enum.GetValues(enumType).Cast<TEnum>();
+
+            IEnumerable<SelectListItem> items = from value in values
+                                                select new SelectListItem
+                                                {
+                                                    Text = Utilities.EnumExtensions.Extensions.GetEnumDescription(value),
+                                                    Value = value.ToString(),
+                                                    Selected = value.Equals(metadata.Model)
+                                                };
+
+            // If the enum is nullable, add an 'empty' item to the collection
+            if (metadata.IsNullableValueType)
+                items = SingleEmptyItem.Concat(items);
+
+            return htmlHelper.RadioButtonListFor(expression, items);
         }
         public static MvcHtmlString RadioButtonListFor<TModel, TProperty>(
         this HtmlHelper<TModel> htmlHelper,
-        Expression<Func<TModel, TProperty>> expression, List<SelectListItem> selectList, object htmlAttributes = null
+        Expression<Func<TModel, TProperty>> expression, IEnumerable<SelectListItem> selectList, object htmlAttributes = null
     )
         {
             ModelMetadata metadata = ModelMetadata.FromLambdaExpression(expression, htmlHelper.ViewData);
@@ -377,7 +520,7 @@ namespace MvcHtmlExtensions
                 sb.AppendFormat(
                     "<label for=\"{0}\">{2} {1}</label>",
                     id,
-                    HttpUtility.HtmlEncode(select.Text),
+                    "<span class='radioLabelText'>" + HttpUtility.HtmlEncode(select.Text) + "</span>",
                     radio
                 );
                 sb.Append("</li>");
@@ -428,7 +571,7 @@ namespace MvcHtmlExtensions
                 sb.AppendFormat(
                     "<label for=\"{0}\">{2} {1}</label>",
                     id,
-                    HttpUtility.HtmlEncode(select.Text),
+                    "<span class='radioLabelText'>" + HttpUtility.HtmlEncode(select.Text) + "</span>",
                     radio
                 );
                 sb.Append("</li>");
