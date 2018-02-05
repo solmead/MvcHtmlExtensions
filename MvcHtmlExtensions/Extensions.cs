@@ -376,28 +376,16 @@ namespace MvcHtmlExtensions
 
         private static readonly SelectListItem[] SingleEmptyItem = new[] { new SelectListItem { Text = "", Value = "" } };
         
-        public static string GetEnumDescription<TEnum>(TEnum value)
+        public static string GetEnumDescription<TModel, TEnum>(this HtmlHelper<TModel> htmlHelper, TEnum value) where TEnum : struct, IConvertible
         {
-            FieldInfo fi = value.GetType().GetField(value.ToString());
-
-            DescriptionAttribute[] attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
-
-            if ((attributes != null) && (attributes.Length > 0))
-                return attributes[0].Description;
-            else
-                return value.ToString();
+            return Utilities.EnumExtensions.Extensions.GetEnumDescription(value);
         }
-
-        public static string GetEnumDescription<TModel, TEnum>(this HtmlHelper<TModel> htmlHelper, TEnum value)
-        {
-            return GetEnumDescription(value);
-        }
-        public static MvcHtmlString EnumDropDownListForEx<TModel, TEnum>(this HtmlHelper<TModel> htmlHelper, Expression<Func<TModel, TEnum>> expression)
+        public static MvcHtmlString EnumDropDownListForEx<TModel, TEnum>(this HtmlHelper<TModel> htmlHelper, Expression<Func<TModel, TEnum>> expression) where TEnum : struct, IConvertible
         {
             return EnumDropDownListForEx(htmlHelper, expression, null);
         }
 
-        public static MvcHtmlString EnumDropDownListForEx<TModel, TEnum>(this HtmlHelper<TModel> htmlHelper, Expression<Func<TModel, TEnum>> expression, object htmlAttributes)
+        public static MvcHtmlString EnumDropDownListForEx<TModel, TEnum>(this HtmlHelper<TModel> htmlHelper, Expression<Func<TModel, TEnum>> expression, object htmlAttributes) where TEnum : struct, IConvertible
         {
             ModelMetadata metadata = ModelMetadata.FromLambdaExpression(expression, htmlHelper.ViewData);
             Type enumType = GetNonNullableModelType(metadata);
@@ -406,7 +394,7 @@ namespace MvcHtmlExtensions
             IEnumerable<SelectListItem> items = from value in values
                                                 select new SelectListItem
                                                 {
-                                                    Text = GetEnumDescription(value),
+                                                    Text = Utilities.EnumExtensions.Extensions.GetEnumDescription(value),
                                                     Value = value.ToString(),
                                                     Selected = value.Equals(metadata.Model)
                                                 };
@@ -421,7 +409,7 @@ namespace MvcHtmlExtensions
         public static MvcHtmlString EnumRadioButtonListFor<TModel, TEnum>(
         this HtmlHelper<TModel> htmlHelper,
         Expression<Func<TModel, TEnum>> expression, object htmlAttributes
-    )
+    ) where TEnum : struct, IConvertible
         {
             ModelMetadata metadata = ModelMetadata.FromLambdaExpression(expression, htmlHelper.ViewData);
             Type enumType = GetNonNullableModelType(metadata);
@@ -430,7 +418,7 @@ namespace MvcHtmlExtensions
             IEnumerable<SelectListItem> items = from value in values
                                                 select new SelectListItem
                                                 {
-                                                    Text = GetEnumDescription(value),
+                                                    Text = Utilities.EnumExtensions.Extensions.GetEnumDescription(value),
                                                     Value = value.ToString(),
                                                     Selected = value.Equals(metadata.Model)
                                                 };
@@ -446,14 +434,14 @@ namespace MvcHtmlExtensions
         String name,
         TEnum? selectedValue,
         object htmlAttributes = null
-    ) where TEnum: struct
+    ) where TEnum : struct, IConvertible
         {
             IEnumerable<TEnum> values = Enum.GetValues(typeof(TEnum)).Cast<TEnum>();
 
             IEnumerable<SelectListItem> items = from value in values
                                                 select new SelectListItem
                                                 {
-                                                    Text = GetEnumDescription(value),
+                                                    Text = Utilities.EnumExtensions.Extensions.GetEnumDescription(value),
                                                     Value = value.ToString(),
                                                     Selected = value.Equals(selectedValue)
                                                 };
@@ -465,7 +453,7 @@ namespace MvcHtmlExtensions
         public static MvcHtmlString EnumRadioButtonListFor<TModel, TEnum>(
         this HtmlHelper<TModel> htmlHelper,
         Expression<Func<TModel, TEnum>> expression
-    )
+    ) where TEnum : struct, IConvertible
         {
             ModelMetadata metadata = ModelMetadata.FromLambdaExpression(expression, htmlHelper.ViewData);
             Type enumType = GetNonNullableModelType(metadata);
@@ -474,7 +462,7 @@ namespace MvcHtmlExtensions
             IEnumerable<SelectListItem> items = from value in values
                                                 select new SelectListItem
                                                 {
-                                                    Text = GetEnumDescription(value),
+                                                    Text = Utilities.EnumExtensions.Extensions.GetEnumDescription(value),
                                                     Value = value.ToString(),
                                                     Selected = value.Equals(metadata.Model)
                                                 };

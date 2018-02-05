@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2020
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MvcHtmlExtensions", "MvcHtmlExtensions\MvcHtmlExtensions.csproj", "{55E05803-6BEB-4DDB-B83A-70026122EEEA}"
 EndProject
@@ -11,6 +11,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{880706
 		.nuget\NuGet.exe = .nuget\NuGet.exe
 		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Utilities.EnumExtensions", "Utilities.EnumExtensionsOld\Utilities.EnumExtensions.csproj", "{91D226CB-12FC-4E45-B636-FBAD015CB511}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Utilities.EnumExtensionsCore", "Utilities.EnumExtensions\Utilities.EnumExtensionsCore.csproj", "{207C42FC-11F8-4539-9629-BB54F41ED92B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,8 +26,19 @@ Global
 		{55E05803-6BEB-4DDB-B83A-70026122EEEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{55E05803-6BEB-4DDB-B83A-70026122EEEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{55E05803-6BEB-4DDB-B83A-70026122EEEA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91D226CB-12FC-4E45-B636-FBAD015CB511}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91D226CB-12FC-4E45-B636-FBAD015CB511}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91D226CB-12FC-4E45-B636-FBAD015CB511}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91D226CB-12FC-4E45-B636-FBAD015CB511}.Release|Any CPU.Build.0 = Release|Any CPU
+		{207C42FC-11F8-4539-9629-BB54F41ED92B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{207C42FC-11F8-4539-9629-BB54F41ED92B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{207C42FC-11F8-4539-9629-BB54F41ED92B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{207C42FC-11F8-4539-9629-BB54F41ED92B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5E4FE7BE-80D9-4281-B9A3-49F0E5919277}
 	EndGlobalSection
 EndGlobal
